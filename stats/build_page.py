@@ -1,7 +1,6 @@
 """Write a Strat Stats page from an atlas JSON.
 
 Usage: python stats/build_page.py atlas.json page.html --title "My Strat Stats"
-  --head FILE, --nav FILE    extra <head> tags and a link above the header (see site/ for 345strategies.com)
   --nq FILE, --nq-replication FILE    the NQ comparison data; without them the vs NQ tabs are hidden
   --repo URL                 the link on the Reproduce tab
 """
@@ -24,8 +23,6 @@ def main() -> None:
     p.add_argument("atlas", type=Path)
     p.add_argument("out", type=Path)
     p.add_argument("--title", required=True)
-    p.add_argument("--head", type=Path)
-    p.add_argument("--nav", type=Path)
     p.add_argument("--nq", type=Path)
     p.add_argument("--nq-replication", type=Path)
     p.add_argument("--repo", default=REPO)
@@ -36,8 +33,6 @@ def main() -> None:
         rep.pop("cells", None)
     page = (
         TEMPLATE.read_text()
-        .replace("__HEAD__", a.head.read_text().rstrip() if a.head else "")
-        .replace("__NAV__", a.nav.read_text().strip() if a.nav else "")
         .replace("__REPO__", json.dumps(a.repo))
         .replace("__NQREP__", embed(rep))
         .replace("__NQ__", embed(json.loads(a.nq.read_text()) if a.nq else None))

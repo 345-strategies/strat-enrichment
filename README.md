@@ -118,7 +118,9 @@ python stats/atlas.py futures minutes.parquet atlas.json --name ES
 python stats/build_page.py atlas.json page.html --title "My Strat Stats"
 ```
 
-Use `futures` or `stocks`. `--tick` sets the stop offset (default 0.25 and 0.01) and `--timeframes` the bars measured. The 345strategies.com page is this template plus `stats/site/head.html` and `stats/site/nav.html` (`--head`, `--nav`) and the NQ comparison data (`--nq`, `--nq-replication`).
+Use `futures` or `stocks`. `--tick` sets the stop offset (default 0.25 and 0.01) and `--timeframes` the bars measured.
+
+`stats/site/build.sh` builds the files behind the 345strategies.com page: the page with its search and summary tags, a plain-text twin and the results as JSON. It takes the ES atlas plus the NQ comparison (`--nq`, `--nq-replication` on `build_page.py`), and its last step pre-renders the first tab with node.
 
 ## What this does not do
 

@@ -121,7 +121,9 @@ def first_breaks(b, m, tick, htf_ctx):
         else:
             fav_s = fav
         cb = (T.c > entry) if d > 0 else (T.c < entry)
-        f2 = (T.c <= S.h) if d > 0 else (T.c >= S.l)    # trigger bar closes back inside: a failed 2
+        # the break failed: the trigger bar is a failed 2 on the side it broke (a bar that also
+        # broke the other side is a 3, and a 3 never fails)
+        f2 = T.disp == ("F2U" if d > 0 else "F2D")
         P = b.iloc[i - 1]
         row = dict(i=i, ts=int(S.ts), sd=int(S.sd), year=datetime.fromordinal(int(S.sd)).year, slot=int(S.slot),
                    dir=d, c2=P.disp, c1=S.disp, c2t=P.type, c1t=S.type, c1green=bool(S.green),
@@ -300,6 +302,9 @@ def main():
             continue
         b = bars[tf]
         tr, amb = first_breaks(b, m, tick, ctx_for(tf))
+        if tr.empty:
+            print(f"{tf}: no first breaks", flush=True)
+            continue
         # setup-bar range against the 14-bar ATR of that timeframe (known at the setup close)
         tr_ = pd.concat([b.h - b.l, (b.h - b.c.shift()).abs(), (b.l - b.c.shift()).abs()], axis=1).max(axis=1)
         atr = tr_.rolling(14).mean().shift(1)
@@ -309,6 +314,8 @@ def main():
         meta.append(dict(tf=tf, bars=len(b), stubs=int(b.stub.sum()), events=len(tr), ambiguous=amb,
                          tie_high=r(b.eqh.mean() * 100), tie_low=r(b.eql.mean() * 100)))
         print(f"{tf}: {len(tr)} first breaks, {amb} same-minute ambiguous", flush=True)
+    if not T:
+        raise SystemExit("no first breaks on any timeframe: the data is too short")
     trades = pd.concat(T, ignore_index=True)
 
     bases = {}
@@ -327,8 +334,8 @@ def main():
         fr = kb.groupby("type").failed.mean() * 100
         for t in ("1", "2U", "2D", "3"):
             freq.append(dict(tf=tf, type=t, pct=r(vc.get(t, 0)), failed_pct=r(fr.get(t)) if t in ("2U", "2D") else None))
-        nxt = kb.type.shift(-1)
-        dnext = kb.disp
+        # the bar that actually came next; none when that bar is a stub
+        nxt = b.type.shift(-1).where(~b.stub.shift(-1, fill_value=True))[kb.index]
         uncond = kb.type.value_counts(normalize=True)
         for frm, g in kb.assign(nx=nxt).dropna(subset=["nx"]).groupby("disp"):
             if len(g) < MIN_N:

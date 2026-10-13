@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-__HEAD__
 <title>__TITLE__</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -41,14 +40,14 @@ nav button:focus-visible,.seg button:focus-visible,td.cell:focus-visible{outline
 h2{font-family:var(--display);font-weight:700;font-size:20px;margin:26px 0 6px}
 h3{font-family:var(--display);font-weight:700;font-size:15px;margin:18px 0 6px;color:var(--fg)}
 p{max-width:72ch;margin:6px 0}
-.lede{font-size:1.06em;color:var(--text);margin:4px 0 14px}
+.lede{font-size:1.06em;color:var(--fg);margin:4px 0 14px}
 #view ul{max-width:76ch;margin:6px 0 10px;padding-left:20px}
 #view li{margin:6px 0;line-height:1.5}
 .note{color:var(--dim);font-size:13px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0 6px}
 .tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
 .tile .k{color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
-.tile .v{font-family:var(--mono);font-size:22px;margin-top:2px;font-variant-numeric:tabular-nums}
+.tile .v{font-family:var(--mono);font-size:clamp(16px,1.7vw,22px);margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tile .s{color:var(--dim);font-size:12px}
 .tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -80,7 +79,6 @@ td.sel{outline:2px solid var(--fg);outline-offset:-2px}
 <body>
 
 <div class="wrap">
-  __NAV__
   <header>
     <div>
       <h1 id="h1"></h1>
@@ -125,8 +123,8 @@ function base(tf,dir){return D.base.find(b=>b.tf===tf&&b.dir===dir)}
 function rows(tab,tf,dir){return D[tab].filter(r=>r.tf===tf&&(dir==null||r.dir===dir))}
 
 function header(){
-  $('#h1').innerHTML = `${D.info.market} Strat Atlas <span class="mk">descriptive</span>`;
-  $('#sub').textContent = `${D.info.market} · ${D.info.start} to ${D.info.end} · ${D.info.minutes.toLocaleString()} one-minute bars · ${D.info.tfs.join(' ')}`;
+  $('#h1').innerHTML = NQ ? `Strat Stats: ${D.info.market} <span class="mk">and NQ</span>` : `Strat Stats: ${D.info.market}`;
+  $('#sub').textContent = `Descriptive statistics · ${D.info.market} ${D.info.start} to ${D.info.end} · ${D.info.minutes.toLocaleString()} one-minute bars · ${D.info.tfs.join(' ')}`;
   $('#types').innerHTML = ORDER.map(t=>chip(t)).join('') + '<span class="note" style="margin-left:6px">TheStratSuite colours. Green and red always mean bull and bear. Above or below the baseline is blue or violet.</span>';
 }
 
@@ -366,7 +364,7 @@ function vMethod(){
   return `<h2>Method</h2>
   <h3>Bars and types</h3><p>Bars are rebuilt from 1-minute data. ${D.info.session==='futures'?D.info.market+' sessions open at 18:00 ET; intraday bars are anchored there, so 4h bars start 18:00, 22:00, 02:00, 06:00, 10:00 and 14:00 ET (15:00, 19:00, 23:00, 03:00, 07:00, 11:00 PT).'+(D.info.market==='ES'&&NQ?' Data is our canonical ES 1-minute file: real CME bars from several sources (Databento per-contract bars for 2018-2019 and for 46 missing sessions, our earlier ES store for 2020 on) that match exactly where they overlap, with nothing interpolated. Prices are back-adjusted at each contract roll from raw prices (the gap between the new contract’s first open and the old one’s last close is removed from all earlier bars), so a roll cannot create a fake 2 or 3. Holiday short sessions are included for every year. Gaps no source can fill: 2019-02-26 19:40 to 22:45 ET and 2020-06-30 18:00 to 19:59 ET; every other missing stretch is a real CME closure or early close.':' Prices are back-adjusted at each contract roll from raw prices, so a roll cannot create a fake 2 or 3.'):'Regular hours only, 09:30 to 16:00 ET (06:30 to 13:00 PT).'} Each bar is compared with the one before using highs and lows only: 1 inside, 2U breaks the high only, 2D the low only, 3 both; a 3 is 3U if it closes above its own open and 3D otherwise, as in TheStratSuite. An equal high or low is not a break. A 2 that closes back inside the prior bar's range is marked failed (F2U, F2D); a 3 is never failed.</p>
   <h3>The trade</h3><p>The setup bar is the last closed bar; the trigger bar is the next one. Long is the first trade through the setup high, short the first through the setup low, sequenced on 1-minute data. If one minute breaks both sides the event is dropped as ambiguous. Entry is the level, or the minute's open if it gapped through. The stop is the other side of the setup bar plus one tick, and 1R is the entry-to-stop distance. Outcomes cover the trigger bar plus two more bars. The entry minute is excluded from stop and target checks because the order inside it is unknowable, and a minute that touches both the stop and the target counts as the stop.</p>
-  <h3>Columns</h3><p><b>+1R first</b>: of trades that reached +1R or the stop within three bars, the share that reached +1R first; 50% is the no-edge value. <b>+2R first</b>: same with a 2R target; compare it with the baseline, not with a fixed number. <b>Close beyond</b>: the trigger bar closes beyond the entry. <b>Fails back inside</b>: the trigger bar closes back inside the setup bar, so the break became a failed 2. <b>MFE/MAE</b>: the best and worst excursion in R before the stop.</p>
+  <h3>Columns</h3><p><b>+1R first</b>: of trades that reached +1R or the stop within three bars, the share that reached +1R first; 50% is the no-edge value. <b>+2R first</b>: same with a 2R target; compare it with the baseline, not with a fixed number. <b>Close beyond</b>: the trigger bar closes beyond the entry. <b>Fails back inside</b>: the trigger bar closes back inside the setup bar after breaking only that side, so the break became a failed 2. A trigger bar that breaks both sides is a 3 and does not count. <b>MFE/MAE</b>: the best and worst excursion in R before the stop.</p>
   <h3>Baselines and tests</h3><p>Each cell is compared with all first breaks on the same timeframe and in the same direction. Intervals are Wilson 95%. Tests are z-tests against the baseline with Benjamini-Hochberg q-values inside each table. Events that follow one another share price paths, so the real sample is smaller than the count and the q-values are optimistic. Treat a star as a reason to look again, never as proof. Cells with fewer than ${MIN_N} events are shown dashed and not tested. Dev is every year to 2022; holdout is 2023 onward.</p>
   <h3>Not covered</h3><p>No costs, slippage, sizing or portfolio effects. This page describes what followed these bar relationships in this sample. It is not a forecast and not a strategy. Research-only.</p>`;
 }
