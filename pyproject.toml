@@ -1,0 +1,32 @@
+[project]
+name = "strat-enrichment"
+version = "0.1.0"
+description = "Rebuild TheStrat bar states on every timeframe from 1-minute bars"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MPL-2.0" }
+authors = [{ name = "Nate King" }]
+keywords = ["thestrat", "price-action", "trading", "futures", "market-structure"]
+dependencies = [
+    "numpy>=2",
+    "pandas>=2.2",
+    "pyarrow>=16",
+    # The definitions. Pinned to the grammar's last change in 345-strategies/thestrat-suite.
+    "thestrat-grammar @ git+https://github.com/345-strategies/thestrat-suite@487e89bd29df57c8267b2c5dd2dbfee94ddd6a85#subdirectory=grammar",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+strat-enrich = "strat_enrichment.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["strat_enrichment*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

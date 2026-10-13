@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a trading-desk reference sheet. Header strip, tab row, one working panel at a time. Dark by choice, like the chart it sits next to. */
+:root{
+  color-scheme: dark;
+  --bg:#0d0f12; --panel:#14171c; --panel2:#1a1e24; --line:#262b33; --fg:#e4e7ec; --dim:#8e96a3; --faint:#5d6571;
+  /* TheStratSuite bar-type colours: green/red are bull/bear only */
+  --t1:#ffeb3b; --t1d:#ff9800; --t2u:#4caf50; --t2d:#f23645; --tf2u:#f77c80; --tf2d:#81c784; --t3u:#089981; --t3d:#e91e63;
+  /* versus-baseline scale: blue above, violet below (never green/red) */
+  --above:79,140,255; --below:167,139,250;
+  --display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", Roboto, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:20px 48px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:1px solid var(--line);padding-bottom:14px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,4vw,38px);letter-spacing:-.01em;margin:0;line-height:1.05;text-wrap:balance}
+h1 .mk{color:var(--dim);font-weight:500}
+.sub{color:var(--dim);font-family:var(--mono);font-size:12px;margin-top:6px}
+.credit{color:var(--faint);font-size:12px;max-width:380px}
+.credit a{color:var(--dim)}
+.types{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px}
+.chip{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:3px;color:#0d0f12;font-weight:500}
+nav{display:flex;flex-wrap:wrap;gap:4px;margin:18px 0 16px}
+nav button,.seg button{font-family:var(--body);font-size:13px;background:transparent;color:var(--dim);border:1px solid var(--line);padding:6px 12px;border-radius:4px;cursor:pointer}
+nav button[aria-pressed="true"],.seg button[aria-pressed="true"]{color:var(--fg);background:var(--panel2);border-color:#3a414c}
+nav button:focus-visible,.seg button:focus-visible,td.cell:focus-visible{outline:2px solid rgb(var(--above));outline-offset:1px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:14px}
+.seg{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.seg .lab{color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-right:6px}
+.seg button{padding:4px 9px;font-size:12px}
+h2{font-family:var(--display);font-weight:700;font-size:20px;margin:26px 0 6px}
+h3{font-family:var(--display);font-weight:700;font-size:15px;margin:18px 0 6px;color:var(--fg)}
+p{max-width:72ch;margin:6px 0}
+.lede{font-size:1.06em;color:var(--fg);margin:4px 0 14px}
+#view ul{max-width:76ch;margin:6px 0 10px;padding-left:20px}
+#view li{margin:6px 0;line-height:1.5}
+.note{color:var(--dim);font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0 6px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.tile .k{color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.tile .v{font-family:var(--mono);font-size:clamp(16px,1.7vw,22px);margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile .s{color:var(--dim);font-size:12px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:6px 9px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px}
+th{color:var(--faint);font-weight:500;font-family:var(--body);font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:var(--panel2);position:sticky;top:0}
+th:first-child,td:first-child{text-align:left}
+tr:last-child td{border-bottom:none}
+td.cell{cursor:pointer;text-align:center;min-width:64px}
+td.cell .n{display:block;color:var(--faint);font-size:10px}
+table.txt td,table.txt th{text-align:left;white-space:normal;font-family:var(--body);font-size:13px;vertical-align:top}
+table.txt td:first-child{white-space:nowrap;color:var(--faint)}
+td.thin{color:var(--faint);border:1px dashed #333a44}
+td.sel{outline:2px solid var(--fg);outline-offset:-2px}
+.star{color:var(--fg);font-weight:600}
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+.grid2>div{min-width:0}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.detail{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;min-width:0}
+.detail dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:8px 0 0;font-size:13px}
+.detail dt{color:var(--dim)}
+.detail dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;color:var(--dim);font-size:12px;margin:8px 0}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.pos{color:rgb(var(--above))}.neg{color:rgb(var(--below))}
+.callout{border-left:3px solid #3a414c;padding:6px 12px;color:var(--dim);margin:10px 0;max-width:80ch}
+@media (prefers-reduced-motion:no-preference){td.cell{transition:outline-color .12s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="h1"></h1>
+      <div class="sub" id="sub"></div>
+    </div>
+    <div class="credit">Format after <b>The Strat Stats</b> (NQ) by <a href="https://x.com/notprofgreen" target="_blank" rel="noopener">@notprofgreen</a> on X. Same trade definition, so the two can be read side by side, plus failed 2s, in-force context and a dev/holdout split from our own pipeline.</div>
+  </header>
+  <div class="types" id="types"></div>
+  <nav id="nav"></nav>
+  <main id="view"></main>
+</div>
+
+<script>
+const D = __DATA__;
+const NQ = __NQ__;
+const REPO = __REPO__;
+const NQREP = __NQREP__;
+const TF = D.info.trade_tfs;
+const S = {tab:'overview', tf: TF.includes('1h') ? '1h' : TF[0], dir:'long', metric:'d1', sel:null, ctx:'ftc', ntf:'15m', ndir:'long'};
+const TABS = [['overview','Overview'],['means','What it means'],['nq','vs NQ'],['setups','Setup grid'],['failed','Failed 2s'],['trans','What follows'],['ctx','Context'],['year','By year'],['method','Method'],['repro','Reproduce']].filter(t=>NQ||!['means','nq'].includes(t[0]));
+const TYPECOL = {'1':'--t1','2U':'--t2u','2D':'--t2d','3':'--t3u','F2U':'--tf2u','F2D':'--tf2d','3U':'--t3u','3D':'--t3d'};
+const ORDER = ['1','2U','F2U','2D','F2D','3U','3D'];
+const LABEL = {'1':'1 inside','2U':'2U','F2U':'F2U (failed 2U)','2D':'2D','F2D':'F2D (failed 2D)','3':'3 outside','3U':'3U (outside, closed up)','3D':'3D (outside, closed down)'};
+const MIN_N = D.info.min_n;
+
+const $ = s => document.querySelector(s);
+const f1 = v => v==null ? '·' : v.toFixed(1);
+const f2 = v => v==null ? '·' : v.toFixed(2);
+const sg = v => v==null ? '·' : (v>=0?'+':'') + v.toFixed(1);
+const nf = v => v==null ? '·' : Math.round(v).toLocaleString();
+const star = (q,n) => (q!=null && q<0.05 && n>=MIN_N) ? '<span class="star">*</span>' : '';
+const btn = (lab,on,fn) => `<button type="button" aria-pressed="${on}" onclick="${fn}">${lab}</button>`;
+const seg = (lab,opts,cur,fn) => `<div class="seg"><span class="lab">${lab}</span>${opts.map(o=>btn(o[1],o[0]===cur,`${fn}('${o[0]}')`)).join('')}</div>`;
+function chip(t){const c = TYPECOL[t]||'--dim';return `<span class="chip" style="background:var(${c})">${t}</span>`}
+function shade(v, scale, n){
+  if(v==null||isNaN(v)) return '';
+  const fade = n==null?1:Math.min(1,Math.sqrt(n/1500));
+  const a = Math.min(Math.abs(v)/scale,1)*0.7*fade;
+  return `background:rgba(${v>=0?'var(--above)':'var(--below)'},${a.toFixed(3)})`.replace('var(--above)','79,140,255').replace('var(--below)','167,139,250');
+}
+function base(tf,dir){return D.base.find(b=>b.tf===tf&&b.dir===dir)}
+function rows(tab,tf,dir){return D[tab].filter(r=>r.tf===tf&&(dir==null||r.dir===dir))}
+
+function header(){
+  $('#h1').innerHTML = NQ ? `Strat Stats: ${D.info.market} <span class="mk">and NQ</span>` : `Strat Stats: ${D.info.market}`;
+  $('#sub').textContent = `Descriptive statistics · ${D.info.market} ${D.info.start} to ${D.info.end} · ${D.info.minutes.toLocaleString()} one-minute bars · ${D.info.tfs.join(' ')}`;
+  $('#types').innerHTML = ORDER.map(t=>chip(t)).join('') + '<span class="note" style="margin-left:6px">TheStratSuite colours. Green and red always mean bull and bear. Above or below the baseline is blue or violet.</span>';
+}
+
+/* ---------------- overview ---------------- */
+function vOverview(){
+  let h = `<p>How often each Strat setup bar breaks, and what happens after the break, measured on 1-minute data against an explicit baseline. Every setup is compared with <b>all</b> first breaks on the same timeframe and in the same direction. There are no strategies, no optimisation and no edge claims.</p>`;
+  h += `<h2>The baseline: every first break</h2><p class="note">+1R first is the share of resolved trades that reached +1R before the stop. With the stop and target the same distance away, a coin-flip market gives 50%.</p><div class="tiles">`;
+  TF.forEach(tf=>{
+    const L=base(tf,'long'), Sh=base(tf,'short');
+    h += `<div class="tile"><div class="k">${tf} · long / short</div><div class="v">${f1(L.p1)}% <span style="color:var(--faint)">/</span> ${f1(Sh.p1)}%</div><div class="s">${nf(L.n+Sh.n)} breaks · trigger closes back inside ${f1((L.f2*L.n+Sh.f2*Sh.n)/(L.n+Sh.n))}%</div></div>`;
+  });
+  h += `</div><p class="note">When both directions sit above 50% on the same timeframe, that is a property of every break there (excluding the entry minute favours whoever just broke out), not of any setup. Read each cell against its baseline, not against 50%.</p>`;
+  // significant cells
+  const sig = D.setups.filter(r=>r.n>=MIN_N && r.q1!=null && r.q1<0.05);
+  const tested = D.setups.filter(r=>r.n>=MIN_N).length;
+  h += `<h2>Setups that differ from the baseline</h2><p>${sig.length} of ${tested} tested setup cells differ on +1R first after correcting for the number of tests (q &lt; 0.05).</p>`;
+  if(sig.length){
+    h += `<div class="tbl"><table><tr><th>TF</th><th>Setup</th><th>Dir</th><th>n</th><th>+1R first</th><th>Baseline</th><th>Diff</th><th>q</th></tr>`;
+    sig.sort((a,b)=>a.q1-b.q1).forEach(r=>{const b=base(r.tf,r.dir);h+=`<tr><td>${r.tf}</td><td>${chip(r.c2)} ${chip(r.c1)}</td><td>${r.dir}</td><td>${nf(r.n)}</td><td>${f1(r.p1)}%</td><td>${f1(b.p1)}%</td><td class="${r.d1>=0?'pos':'neg'}">${sg(r.d1)}</td><td>${r.q1.toFixed(3)}</td></tr>`});
+    h += `</table></div>`;
+  }
+  h += `<h2>Dataset</h2><div class="tbl"><table><tr><th>TF</th><th>Bars</th><th>Stub bars</th><th>First breaks</th><th>Same-minute ambiguous</th><th>Equal highs %</th><th>Equal lows %</th></tr>`;
+  D.meta.forEach(m=>h+=`<tr><td>${m.tf}</td><td>${nf(m.bars)}</td><td>${nf(m.stubs)}</td><td>${nf(m.events)}</td><td>${nf(m.ambiguous)}</td><td>${f2(m.tie_high)}</td><td>${f2(m.tie_low)}</td></tr>`);
+  h += `</table></div><p class="note">Stub bars (holiday and early-close bars with under 60% of the usual minutes for their slot) are kept in the bar tables but never used as a setup or trigger. Equal highs or lows are not breaks.</p>`;
+  return h;
+}
+
+
+/* ---------------- what it means ---------------- */
+function vMeans(){
+  const tested = D.setups.filter(r=>r.n>=MIN_N).length;
+  const sig = D.setups.filter(r=>r.n>=MIN_N && r.q1!=null && r.q1<0.05);
+  const up = sig.filter(r=>r.d1>0).length, dn = sig.length-up;
+  const ftcSig = D.ftc.filter(r=>r.n>=MIN_N && r.q1!=null && r.q1<0.05).length;
+  const rr = D.rng.filter(r=>r.tf===TF[0]&&r.dir==='long'&&r.rng_bin!=null), rs = rr[0]||{}, rb = rr[rr.length-1]||{};
+  let h = `<p class="lede">The short version: the bar label on its own does not tell you which way the next break will run. That holds on ES here, on NQ in the page this one follows, and on SPY in our earlier tests. It is a narrow finding about one simple trade, not a verdict on TheStrat.</p>`;
+  h += `<h2>What this page measured</h2><p>Every time a bar broke the prior bar's high or low, we took the first-break trade: enter at the break, stop at the other side of the setup bar, and see whether price reached one stop-distance in profit (+1R) or the stop first, within the trigger bar and the next two bars. Then we asked whether any setup (the two bars before the break, their types, failed 2s, timeframe continuity, the next timeframe being in force) did better than <b>all</b> breaks on the same timeframe and direction.</p>`;
+  h += `<h2>What it shows</h2><ul>
+  <li><b>Setup labels barely move the odds.</b> ${sig.length} of ${tested} tested setup cells differ from the baseline after correcting for the number of tests (${up} better, ${dn} worse). By chance alone you expect a handful. The differences that do show up are a few percentage points.</li>
+  <li><b>Timeframe continuity adds nothing measurable to this trade.</b> ${ftcSig} of the aligned, mixed and opposed groups differ from the baseline. Trading a break with all higher timeframes green does about as well as trading against them.</li>
+  <li><b>It replicates.</b> The baselines on ES and NQ agree within about two points on every shared timeframe, and the one cell both pages flag is the same: a 15m 2D after a 2D, taken long, does worse than average on both (see the vs NQ tab). Getting the same answer from two markets and two independent builds is what makes the null believable.</li>
+  <li><b>The structure itself is real.</b> A failed 2 is followed by a bar breaking the other way far more often than a held 2 is (Failed 2s tab). The size of the setup bar matters far more than its type: on 15m longs, trades off the smallest setup bars resolve within three bars ${f1(rs.res)}% of the time against ${f1(rb.res)}% off the largest (Context tab, by setup range). The language describes something real; it just does not hand you direction on a fixed bracket.</li>
+  </ul>`;
+  h += `<h2>What it does not show</h2><ul>
+  <li><b>It does not show TheStrat has no edge.</b> It tests one trade with one fixed exit. Real use adds exits (targets at magnitude or exhaustion, trailing on the timeframe that matters, holding to the bar close), sizing, and the choice of which setups to take. None of that is here.</li>
+  <li><b>It does not test asymmetric trades.</b> A trade can lose more often than it wins and still pay if the winners are bigger. The +2R column and the excursion numbers are a first look, but a proper test needs the real target and management rule, measured against the same baseline.</li>
+  <li><b>It does not test levels or broadening formations.</b> Where a break happens (into a prior range edge, through a magnitude level, at a broadening boundary) is a different question from which bars came before it. That is the part of TheStrat this page cannot see.</li>
+  <li><b>It does not test a trader.</b> Discretionary selection, reading several timeframes at once, and skipping the bad days are not mechanical setups. They can only be tested by logging real calls before the outcome is known.</li>
+  </ul>`;
+  h += `<h2>Is this enough data to judge the edge?</h2><p>It is enough for the narrow question. Over ${D.info.start.slice(0,4)}-${D.info.end.slice(0,4)} there are more than ${Math.floor(D.base.reduce((a,b)=>a+b.n,0)/1000)}k first-break trades on ES, and a real few-point edge on a common setup would show up. It is not enough to judge TheStrat as a whole: one market family (US index futures), one trade definition, no costs, and every cell is tested in the same sample it describes. The dev and holdout split (to 2022, 2023 on) is the honest check; a cell that only shows up in one half is usually noise.</p>`;
+  h += `<h2>What it means for traders</h2><ul>
+  <li><b>Use the language to describe, not to predict.</b> Bar types, failed 2s and continuity are an objective, shared way to say what price is doing. On their own they are a coin flip with a known stop.</li>
+  <li><b>Do not pay for a setup name.</b> A 2-1-2 or a 3-1-2 is not, by itself, a better bet than any other break on the same timeframe. Anyone quoting a high win rate for a named setup should be asked: compared with what?</li>
+  <li><b>Look for edge where this page cannot see.</b> Management, location (levels and range edges), volatility regime and selection are the open questions. They are also where experienced Strat traders say the skill is.</li>
+  <li><b>Hold any claim to the same bar.</b> A baseline, a correction for many tests, and a holdout. That applies to the leads on this page too: 15m 1-1 long and 30m 1-F2D long point the same way in both halves but are not significant in either alone.</li>
+  </ul><p class="note">Research-only. No costs or slippage. A description of this sample, not a forecast.</p>`;
+  return h;
+}
+
+/* ---------------- vs NQ ---------------- */
+function nqCell(tf,dir,c2,c1){return NQ.cells.find(c=>c.tf===tf&&c.dir===dir&&c.c2t===c2&&c.c1t===c1)}
+function esCell(tf,dir,c2,c1){return D.setups_type.find(c=>c.tf===tf&&c.dir===dir&&c.c2t===c2&&c.c1t===c1)}
+function setNtf(t){S.ntf=t;render()} function setNdir(d){S.ndir=d;render()}
+function vNq(){
+  const shared = TF.filter(t=>NQ.tfs.includes(t));
+  let h = `<p>This page follows <a href="${NQ.source}" target="_blank" rel="noopener">The Strat Stats</a> by <a href="https://x.com/notprofgreen" target="_blank" rel="noopener">@notprofgreen</a> on X, built on NQ futures. Same trade, same stop, same three-bar window, same baseline and tests, so the two can be read side by side. Below: where the method matches, the numbers next to each other, and what this page adds.</p>`;
+  if(NQREP){const R=NQREP, A=R.agree, sh=R.sig_ours.filter(c=>!R.sig_his.some(x=>x.tf===c.tf&&x.dir===c.dir&&x.c2===c.c2&&x.c1===c.c1));
+  h += `<h2>Replication: this page's code on NQ</h2><p>To check the code, we ran it on our own clean NQ 1-minute file (Databento, raw contract prices, roll-adjusted the same way as ES), on his dates (${R.info.start} to ${R.info.end}) and his seven timeframes. It reproduces his page almost exactly.</p><ul>
+  <li><b>Bars and trades</b>: within 0.1% of his counts on every timeframe, and within 1.2% for trades (largest gap on 30m).</li>
+  <li><b>Setup cells</b>: across the ${A.cells} cells with at least ${MIN_N} trades in both, the lift over baseline correlates ${A.corr.toFixed(2)} with his, has the same sign ${A.sign_match}% of the time, and differs by ${A.mean_abs_diff} points on average (${A.within_2pts}% within 2 points). Trade counts per cell match to within about 1.5%.</li>
+  <li><b>Flagged cells</b>: his only significant cell, 15m 2D-2D long, flags here too (${sg(R.sig_his[0].our_d1)} vs his ${sg(R.sig_his[0].his_d1)}).${sh.length?` One more crosses q &lt; 0.05 on our run: ${sh.map(c=>`${c.tf} ${c.c2}-${c.c1} ${c.dir} ${sg(c.our_d1)} (his ${sg(c.his_d1)}, q ${c.his_q1.toFixed(2)})`).join(', ')}, the same direction and borderline on his page.`:''}</li>
+  <li><b>One systematic gap</b>: our +1R-first baselines run 0.1 to 1.4 points above his, largest on 15m, and slightly more trades resolve inside the window. That points to a small difference in how a trade resolves near the window edges, not in setups. Lifts are measured against each run's own baseline, so it cancels out of the cell comparison.</li></ul>
+  <p class="note">So the ES results on this page come from the same machinery as his NQ results. Where ES and NQ differ, that is the market, not the code.</p>
+  <div class="tbl"><table><tr><th>TF</th><th>Bars (his / ours)</th><th>Trades (his / ours)</th><th>+1R long (his / ours)</th><th>+1R short (his / ours)</th><th>Cell lift corr.</th></tr>${R.meta.map(m=>{const bl=R.base.find(b=>b.tf===m.tf&&b.dir==='long'), bs=R.base.find(b=>b.tf===m.tf&&b.dir==='short'), bt=R.by_tf.find(b=>b.tf===m.tf);return `<tr><td>${m.tf}</td><td>${nf(m.his_bars)} / ${nf(m.our_bars)}</td><td>${nf(m.his_events)} / ${nf(m.our_events)}</td><td>${f1(bl.his_p1)}% / ${f1(bl.our_p1)}%</td><td>${f1(bs.his_p1)}% / ${f1(bs.our_p1)}%</td><td>${bt?bt.corr.toFixed(2):'·'}</td></tr>`}).join('')}</table></div>`;}
+  h += `<h2>Method, side by side</h2><div class="tbl"><table class="txt"><tr><th></th><th>NQ page</th><th>This page</th></tr>
+  <tr><td>Market</td><td>NQ futures</td><td>ES futures</td></tr>
+  <tr><td>Dates</td><td>${NQ.info.start} to ${NQ.info.end}</td><td>${D.info.start} to ${D.info.end}</td></tr>
+  <tr><td>Timeframes</td><td>${NQ.tfs.join(', ')}</td><td>${D.info.trade_tfs.join(', ')} (W for context)</td></tr>
+  <tr><td>Trade</td><td colspan="2">First break of the setup bar; stop at its other side plus one tick; +1R or stop within the trigger bar and two more; OCO sequenced on 1-minute data; entry minute excluded</td></tr>
+  <tr><td>Baseline and tests</td><td colspan="2">All first breaks on the same timeframe and direction; Wilson intervals; z-tests with Benjamini-Hochberg q-values</td></tr>
+  <tr><td>Bar types</td><td>1, 2U, 2D, 3</td><td>Also F2U/F2D, and 3U/3D by close vs open</td></tr>
+  <tr><td>Rolls</td><td colspan="2">Back-adjusted from raw contract prices; bars anchored at 18:00 ET</td></tr></table></div>`;
+  h += `<h2>Baselines</h2><p class="note">+1R first for every first break. The two markets agree within about two points.</p><div class="tbl"><table><tr><th>TF</th><th>Dir</th><th>NQ +1R</th><th>ES +1R</th><th>NQ +2R</th><th>ES +2R</th><th>NQ close beyond</th><th>ES close beyond</th></tr>`;
+  shared.forEach(tf=>['long','short'].forEach(d=>{const n=NQ.base[tf][d], e=base(tf,d); h+=`<tr><td>${tf}</td><td>${d}</td><td>${f1(n.p1)}%</td><td>${f1(e.p1)}%</td><td>${f1(n.p2)}%</td><td>${f1(e.p2)}%</td><td>${f1(n.cb)}%</td><td>${f1(e.cb)}%</td></tr>`}));
+  h += `</table></div>`;
+  // cell comparison
+  const T4=['1','2U','2D','3'];
+  h += `<h2>Setup cells: lift over baseline, NQ vs ES</h2><div class="controls">${seg('Timeframe',shared.map(t=>[t,t]),S.ntf,'setNtf')}${seg('Direction',[['long','Long'],['short','Short']],S.ndir,'setNdir')}</div>`;
+  h += `<p class="note">Each cell is C2 then C1 (the setup bar), using the NQ page's four types so they line up. Top number NQ, bottom ES, both in points of +1R first versus that market's own baseline. * = q &lt; 0.05. Faded = under ${MIN_N} events.</p><div class="tbl"><table><tr><th>C2 \\ C1</th>${T4.map(t=>`<th style="text-align:center">${chip(t)}</th>`).join('')}</tr>`;
+  T4.forEach(c2=>{h+=`<tr><td>${chip(c2)}</td>`;T4.forEach(c1=>{const n=nqCell(S.ntf,S.ndir,c2,c1), e=esCell(S.ntf,S.ndir,c2,c1);
+    const cellv=(r)=>!r?'·':(r.n<MIN_N?`<span style="opacity:.45">${sg(r.d1)}</span>`:`${sg(r.d1)}${star(r.q1,r.n)}`);
+    h+=`<td class="cell" style="text-align:center;cursor:default"><div style="${n&&n.n>=MIN_N?shade(n.d1,6,n.n):''};border-radius:3px">NQ ${cellv(n)}</div><div style="${e&&e.n>=MIN_N?shade(e.d1,6,e.n):''};border-radius:3px;margin-top:2px">ES ${cellv(e)}</div></td>`});h+=`</tr>`});
+  h += `</table></div>`;
+  // agreement
+  let pairs=[]; shared.forEach(tf=>['long','short'].forEach(d=>T4.forEach(c2=>T4.forEach(c1=>{const n=nqCell(tf,d,c2,c1),e=esCell(tf,d,c2,c1); if(n&&e&&n.n>=MIN_N&&e.n>=MIN_N) pairs.push([n.d1,e.d1])}))));
+  const same = pairs.filter(p=>Math.sign(p[0])===Math.sign(p[1])).length;
+  const mx=pairs.reduce((a,p)=>a+p[0],0)/pairs.length, my=pairs.reduce((a,p)=>a+p[1],0)/pairs.length;
+  const cov=pairs.reduce((a,p)=>a+(p[0]-mx)*(p[1]-my),0), vx=pairs.reduce((a,p)=>a+(p[0]-mx)**2,0), vy=pairs.reduce((a,p)=>a+(p[1]-my)**2,0);
+  const nqSig=NQ.cells.filter(c=>c.n>=MIN_N&&c.q1!=null&&c.q1<0.05), esSig=D.setups_type.filter(c=>c.n>=MIN_N&&c.q1!=null&&c.q1<0.05);
+  h += `<h2>How well they agree</h2><ul>
+  <li>Cells flagged at q &lt; 0.05: NQ ${nqSig.length} of ${NQ.cells.filter(c=>c.n>=MIN_N).length} (${nqSig.map(c=>`${c.tf} ${c.c2t}-${c.c1t} ${c.dir} ${sg(c.d1)}`).join(', ')||'none'}); ES ${esSig.length} of ${D.setups_type.filter(c=>c.n>=MIN_N).length} (${esSig.map(c=>`${c.tf} ${c.c2t}-${c.c1t} ${c.dir} ${sg(c.d1)}`).join(', ')||'none'}).</li>
+  <li>Across the ${pairs.length} cells both markets can test, the lift has the same sign ${Math.round(same/pairs.length*100)}% of the time (50% would be pure chance), and the correlation of the lifts is ${(cov/Math.sqrt(vx*vy)).toFixed(2)}.</li>
+  <li>Read together: the baselines match closely, almost every cell sits near zero in both markets, and the cell-to-cell wiggles mostly do not repeat. That is what a market with no setup edge on this trade looks like. The one exception that repeats, 15m 2D-2D long, is a small negative.</li></ul>`;
+  h += `<h2>What this page adds</h2><ul>
+  <li><b>Failed 2s as setups</b>: F2U and F2D get their own rows and columns in the Setup grid, and their own tab.</li>
+  <li><b>3U and 3D</b>: outside bars split by close vs open, the TheStratSuite rule.</li>
+  <li><b>Next timeframe in force</b>: whether the next higher timeframe is in force with, against or failing the trade (Context tab).</li>
+  <li><b>Dev and holdout</b>: every setup cell shown to 2022 and from 2023 on, so a one-period fluke is visible (Setup grid detail).</li>
+  <li><b>Daily setups</b> and an <b>18:00-anchored 4h</b> matching the CME session, plus the plain-English <b>What it means</b> tab.</li>
+  </ul><p class="note">NQ numbers are copied from the NQ page's own data. Its 2h, 6h and 8h timeframes have no ES counterpart here.</p>`;
+  return h;
+}
+
+/* ---------------- setup grid ---------------- */
+const METRICS = {d1:['+1R first vs baseline','p1','d1','q1',6], dcb:['Close beyond vs baseline','cb','dcb','qcb',6], df2:['Trigger fails back inside vs baseline','f2','df2','qf2',6], n:['Count','n',null,null,0]};
+function vSetups(){
+  const [mlab,key,dkey,qkey,scale] = METRICS[S.metric];
+  let h = `<div class="controls">${seg('Timeframe',TF.map(t=>[t,t]),S.tf,'setTf')}${seg('Direction',[['long','Long (break of high)'],['short','Short (break of low)']],S.dir,'setDir')}${seg('Show',Object.entries(METRICS).map(([k,v])=>[k,v[0].split(' vs')[0]]),S.metric,'setMetric')}</div>`;
+  const R = rows('setups',S.tf,S.dir);
+  const c2s = ORDER.filter(t=>R.some(r=>r.c2===t)), c1s = ORDER.filter(t=>R.some(r=>r.c1===t));
+  const b = base(S.tf,S.dir);
+  h += `<div class="grid2"><div><div class="tbl"><table><tr><th>C2 ↓ / C1 →</th>${c1s.map(t=>`<th style="text-align:center">${chip(t)}</th>`).join('')}</tr>`;
+  c2s.forEach(c2=>{
+    h += `<tr><td>${chip(c2)}</td>`;
+    c1s.forEach(c1=>{
+      const r = R.find(x=>x.c2===c2&&x.c1===c1);
+      if(!r){h+='<td></td>';return}
+      const thin = r.n<MIN_N, val = r[key];
+      const sel = S.sel && S.sel[0]===c2 && S.sel[1]===c1;
+      const style = thin||!dkey ? '' : shade(r[dkey],scale,r.n);
+      const txt = S.metric==='n' ? nf(r.n) : (dkey && !thin ? sg(r[dkey]) : f1(val));
+      h += `<td class="cell ${thin?'thin':''} ${sel?'sel':''}" tabindex="0" style="${style}" onclick="pick('${c2}','${c1}')" onkeydown="if(event.key==='Enter')pick('${c2}','${c1}')">${txt}${dkey?star(r[qkey],r.n):''}<span class="n">${nf(r.n)}</span></td>`;
+    });
+    h += `</tr>`;
+  });
+  h += `</table></div><div class="legend"><span><span class="sw" style="background:rgba(79,140,255,.6)"></span>above baseline</span><span><span class="sw" style="background:rgba(167,139,250,.6)"></span>below</span><span>faded = fewer events · dashed = under ${MIN_N}, not tested · * q &lt; 0.05</span></div>`;
+  h += `<p class="note">Rows are the bar before the setup (C2), columns the setup bar (C1). The trade is the first break of C1 on the next bar. Baseline for ${S.tf} ${S.dir}: +1R first ${f1(b.p1)}%, close beyond ${f1(b.cb)}%, trigger closes back inside ${f1(b.f2)}%.</p></div>`;
+  h += `<div class="detail">${detail()}</div></div>`;
+  return h;
+}
+function detail(){
+  if(!S.sel) return `<h3>Pick a cell</h3><p class="note">Each cell's detail shows its interval, its baseline, how it did before and after 2023, and its excursions in R.</p>`;
+  const [c2,c1] = S.sel;
+  const r = rows('setups',S.tf,S.dir).find(x=>x.c2===c2&&x.c1===c1);
+  if(!r) return '';
+  const b = base(S.tf,S.dir);
+  const per = D.period.filter(x=>x.tf===S.tf&&x.dir===S.dir&&x.c2===c2&&x.c1===c1);
+  const dev = per.find(x=>x.period.startsWith('dev')), hol = per.find(x=>x.period.startsWith('hold'));
+  let h = `<h3>${chip(c2)} ${chip(c1)} · ${S.tf} ${S.dir}</h3><dl>`;
+  h += `<dt>Events</dt><dd>${nf(r.n)} (resolved ${nf(r.n1)})</dd>`;
+  h += `<dt>+1R first</dt><dd>${f1(r.p1)}% [${r.p1_ci?f1(r.p1_ci[0])+', '+f1(r.p1_ci[1]):'·'}] vs ${f1(b.p1)}%</dd>`;
+  h += `<dt>+2R first</dt><dd>${f1(r.p2)}% vs ${f1(b.p2)}%</dd>`;
+  h += `<dt>Close beyond entry</dt><dd>${f1(r.cb)}% vs ${f1(b.cb)}%</dd>`;
+  h += `<dt>Trigger fails back inside</dt><dd>${f1(r.f2)}% vs ${f1(b.f2)}%</dd>`;
+  h += `<dt>Resolved in 3 bars</dt><dd>${f1(r.res)}% vs ${f1(b.res)}%</dd>`;
+  h += `<dt>Median MFE / MAE</dt><dd>${f2(r.mfe)}R / ${f2(r.mae)}R</dd>`;
+  h += `<dt>Median risk</dt><dd>${f2(r.rpct)}% of price</dd>`;
+  h += `<dt>q (+1R first)</dt><dd>${r.q1==null?'not tested':r.q1.toFixed(3)}</dd>`;
+  h += `<dt>Dev, to 2022</dt><dd>${dev?f1(dev.p1)+'% (n '+nf(dev.n)+')':'·'}</dd>`;
+  h += `<dt>Holdout, 2023+</dt><dd>${hol?f1(hol.p1)+'% (n '+nf(hol.n)+')':'·'}</dd></dl>`;
+  h += `<p class="note" style="margin-top:10px">A real effect should hold in both periods. One that only shows up in one period is usually noise.</p>`;
+  return h;
+}
+
+/* ---------------- failed 2s ---------------- */
+function vFailed(){
+  let h = `<p>A failed 2 broke the prior bar's high (2U) or low (2D) and closed back inside its range. Only 2s can fail: a 3 is 3U or 3D by its close against its own open. Counted on closed bars.</p>`;
+  h += `<h2>How often a break fails by the close</h2><div class="tbl"><table><tr><th>TF</th><th>1 %</th><th>2U %</th><th>2U failed</th><th>2D %</th><th>2D failed</th><th>3 %</th></tr>`;
+  D.info.tfs.forEach(tf=>{
+    const g = t => D.freq.find(x=>x.tf===tf&&x.type===t)||{};
+    h += `<tr><td>${tf}</td><td>${f1(g('1').pct)}</td><td>${f1(g('2U').pct)}</td><td>${f1(g('2U').failed_pct)}%</td><td>${f1(g('2D').pct)}</td><td>${f1(g('2D').failed_pct)}%</td><td>${f1(g('3').pct)}</td></tr>`;
+  });
+  h += `</table></div>`;
+  h += `<h2>What the next bar does, failed vs held</h2><div class="controls">${seg('Timeframe',D.info.tfs.map(t=>[t,t]),S.tf,'setTf')}</div><div class="tbl"><table><tr><th>Bar</th><th>Closed</th><th>n</th><th>Next 1</th><th>Next 2U</th><th>Next 2D</th><th>Next 3</th></tr>`;
+  D.failed.filter(x=>x.tf===S.tf).forEach(x=>{
+    h += `<tr><td>${chip(x.type)}</td><td>${x.failed?'back inside (failed)':'beyond (held)'}</td><td>${nf(x.n)}</td><td>${f1(x.next_1)}%</td><td>${f1(x.next_2U)}%</td><td>${f1(x.next_2D)}%</td><td>${f1(x.next_3)}%</td></tr>`;
+  });
+  h += `</table></div><p class="callout">Read with care: a bar that closed back inside has its close nearer the far side, so the next bar is more likely to break that way by distance alone. This table describes, it does not test.</p>`;
+  h += `<h2>Trading the break after a failed setup bar</h2><p class="note">First breaks where the setup bar itself was a failed 2 or 3, against all first breaks. Short after F2U is the classic failed-2 reversal.</p>`;
+  h += ctxTable('c1failed', v => v===true||v==='True'||v===1 ? 'setup bar failed (F2)' : 'setup bar held or inside');
+  return h;
+}
+
+/* ---------------- transitions ---------------- */
+function vTrans(){
+  let h = `<div class="controls">${seg('Timeframe',D.info.tfs.map(t=>[t,t]),S.tf,'setTf')}</div>`;
+  const R = D.trans.filter(x=>x.tf===S.tf).sort((a,b)=>ORDER.indexOf(a.frm)-ORDER.indexOf(b.frm));
+  h += `<p>The next bar's type after each closed bar, with the difference from the unconditional mix on the same timeframe in small print.</p><div class="tbl"><table><tr><th>After</th><th>n</th>${['1','2U','2D','3'].map(t=>`<th style="text-align:center">${chip(t)}</th>`).join('')}</tr>`;
+  R.forEach(x=>{
+    h += `<tr><td>${chip(x.frm)}</td><td>${nf(x.n)}</td>`;
+    ['1','2U','2D','3'].forEach(t=>{h+=`<td class="cell" style="${shade(x['d'+t],10,x.n)};cursor:default">${f1(x[t])}%${star(x['q'+t],x.n)}<span class="n">${sg(x['d'+t])}</span></td>`});
+    h += `</tr>`;
+  });
+  h += `</table></div><p class="callout">Bar-type sequences on index futures sit close to what a random walk with the same bar ranges produces. Large differences here mostly reflect where the close sits in the bar, not a pattern with memory.</p>`;
+  return h;
+}
+
+/* ---------------- context ---------------- */
+const CTX = {ftc:['Timeframe continuity','Colour of every higher bar (all higher timeframes in the atlas, plus D and W) at the setup bar\'s close: aligned means all agree with the trade.', v=>v],
+  nxt_inforce:['Next timeframe in force','Is the next timeframe up beyond its prior bar\'s high or low at the setup close? With, against, failing (broke and came back inside) or none.', v=>v],
+  colour:['Setup bar colour','Did the setup bar close in the trade\'s direction?', v=>v],
+  rng_bin:['Setup bar size','Setup bar range over the prior 14-bar ATR of its timeframe.', v=>v]};
+const CTXSRC = {ftc:'ftc',nxt_inforce:'inforce',colour:'colour',rng_bin:'rng'};
+function ctxTable(src, lab){
+  const R = D[src].filter(x=>x.tf===S.tf);
+  let h = `<div class="controls">${seg('Timeframe',TF.map(t=>[t,t]),S.tf,'setTf')}</div><div class="tbl"><table><tr><th>Group</th><th>Dir</th><th>n</th><th>+1R first</th><th>Diff</th><th>Close beyond diff</th><th>Fails back inside diff</th><th>Resolved</th><th>q (+1R)</th></tr>`;
+  const key = Object.keys(R[0]||{}).find(k=>!['n','n1','p1','p1_ci','p2','cb','f2','res','mfe','mae','rpct','d1','dcb','df2','pz1','pzcb','pzf2','q1','qcb','qf2','tf','dir'].includes(k));
+  R.forEach(x=>{
+    const thin = x.n<MIN_N;
+    h += `<tr><td>${lab(x[key])}</td><td>${x.dir}</td><td>${nf(x.n)}</td><td>${f1(x.p1)}%</td><td class="${thin?'':(x.d1>=0?'pos':'neg')}">${thin?'·':sg(x.d1)}${star(x.q1,x.n)}</td><td>${thin?'·':sg(x.dcb)}</td><td>${thin?'·':sg(x.df2)}</td><td>${f1(x.res)}%</td><td>${x.q1==null?'·':x.q1.toFixed(3)}</td></tr>`;
+  });
+  return h + `</table></div>`;
+}
+function vCtx(){
+  const [lab,desc] = CTX[S.ctx];
+  let h = `<div class="controls">${seg('Condition',Object.entries(CTX).map(([k,v])=>[k,v[0]]),S.ctx,'setCtx')}</div><p>${desc}</p>`;
+  h += ctxTable(CTXSRC[S.ctx], v=>v);
+  if(S.ctx==='ftc') h += `<p class="callout">Measured at the setup bar's close, before the trigger, so the break itself cannot create the alignment. Measured at the trigger price instead, alignment is partly arithmetic.</p>`;
+  if(S.ctx==='rng_bin') h += `<p class="callout">Bar size changes how often a trade resolves inside three bars much more than which side it resolves on. That is information about range, not direction.</p>`;
+  return h;
+}
+
+/* ---------------- by year ---------------- */
+function vYear(){
+  let h = `<div class="controls">${seg('Timeframe',TF.map(t=>[t,t]),S.tf,'setTf')}</div><p>The baseline (every first break) by year. If a setup's difference from this flips sign from year to year, it is not a stable feature.</p>`;
+  h += `<div class="tbl"><table><tr><th>Year</th><th>Long n</th><th>Long +1R first</th><th>Short n</th><th>Short +1R first</th><th>Long fails back inside</th><th>Short fails back inside</th></tr>`;
+  const ys = [...new Set(D.year.filter(x=>x.tf===S.tf).map(x=>x.year))].sort();
+  ys.forEach(y=>{
+    const L = D.year.find(x=>x.tf===S.tf&&x.year===y&&x.dir==='long')||{}, Sh = D.year.find(x=>x.tf===S.tf&&x.year===y&&x.dir==='short')||{};
+    h += `<tr><td>${y}</td><td>${nf(L.n)}</td><td>${f1(L.p1)}%</td><td>${nf(Sh.n)}</td><td>${f1(Sh.p1)}%</td><td>${f1(L.f2)}%</td><td>${f1(Sh.f2)}%</td></tr>`;
+  });
+  return h + `</table></div>`;
+}
+
+/* ---------------- method ---------------- */
+function vMethod(){
+  return `<h2>Method</h2>
+  <h3>Bars and types</h3><p>Bars are rebuilt from 1-minute data. ${D.info.session==='futures'?D.info.market+' sessions open at 18:00 ET; intraday bars are anchored there, so 4h bars start 18:00, 22:00, 02:00, 06:00, 10:00 and 14:00 ET (15:00, 19:00, 23:00, 03:00, 07:00, 11:00 PT).'+(D.info.market==='ES'&&NQ?' Data is our canonical ES 1-minute file: real CME bars from several sources (Databento per-contract bars for 2018-2019 and for 46 missing sessions, our earlier ES store for 2020 on) that match exactly where they overlap, with nothing interpolated. Prices are back-adjusted at each contract roll from raw prices (the gap between the new contract’s first open and the old one’s last close is removed from all earlier bars), so a roll cannot create a fake 2 or 3. Holiday short sessions are included for every year. Gaps no source can fill: 2019-02-26 19:40 to 22:45 ET and 2020-06-30 18:00 to 19:59 ET; every other missing stretch is a real CME closure or early close.':' Prices are back-adjusted at each contract roll from raw prices, so a roll cannot create a fake 2 or 3.'):'Regular hours only, 09:30 to 16:00 ET (06:30 to 13:00 PT).'} Each bar is compared with the one before using highs and lows only: 1 inside, 2U breaks the high only, 2D the low only, 3 both; a 3 is 3U if it closes above its own open and 3D otherwise, as in TheStratSuite. An equal high or low is not a break. A 2 that closes back inside the prior bar's range is marked failed (F2U, F2D); a 3 is never failed.</p>
+  <h3>The trade</h3><p>The setup bar is the last closed bar; the trigger bar is the next one. Long is the first trade through the setup high, short the first through the setup low, sequenced on 1-minute data. If one minute breaks both sides the event is dropped as ambiguous. Entry is the level, or the minute's open if it gapped through. The stop is the other side of the setup bar plus one tick, and 1R is the entry-to-stop distance. Outcomes cover the trigger bar plus two more bars. The entry minute is excluded from stop and target checks because the order inside it is unknowable, and a minute that touches both the stop and the target counts as the stop.</p>
+  <h3>Columns</h3><p><b>+1R first</b>: of trades that reached +1R or the stop within three bars, the share that reached +1R first; 50% is the no-edge value. <b>+2R first</b>: same with a 2R target; compare it with the baseline, not with a fixed number. <b>Close beyond</b>: the trigger bar closes beyond the entry. <b>Fails back inside</b>: the trigger bar closes back inside the setup bar after breaking only that side, so the break became a failed 2. A trigger bar that breaks both sides is a 3 and does not count. <b>MFE/MAE</b>: the best and worst excursion in R before the stop.</p>
+  <h3>Baselines and tests</h3><p>Each cell is compared with all first breaks on the same timeframe and in the same direction. Intervals are Wilson 95%. Tests are z-tests against the baseline with Benjamini-Hochberg q-values inside each table. Events that follow one another share price paths, so the real sample is smaller than the count and the q-values are optimistic. Treat a star as a reason to look again, never as proof. Cells with fewer than ${MIN_N} events are shown dashed and not tested. Dev is every year to 2022; holdout is 2023 onward.</p>
+  <h3>Not covered</h3><p>No costs, slippage, sizing or portfolio effects. This page describes what followed these bar relationships in this sample. It is not a forecast and not a strategy. Research-only.</p>`;
+}
+
+
+/* ---------------- reproduce ---------------- */
+function vRepro(){
+  return `<h2>Reproduce it on your own data</h2>
+  <p>Everything on this page comes from open code and 1-minute bars. Run it on any market you have 1-minute data for and you get this page back for that market.</p>
+  <p><a href="${REPO}" target="_blank" rel="noopener"><b>${REPO.replace('https://','')}</b></a></p>
+  <h3>What you need</h3><ul>
+  <li>Python 3.10 or newer.</li>
+  <li>1-minute bars as a parquet file with columns <code>ts</code> (bar start, UTC epoch seconds), <code>o</code>, <code>h</code>, <code>l</code>, <code>c</code>. For futures, use raw contract prices and add <code>contract</code>; each roll is back-adjusted for you, so a roll can't print a fake 2 or 3.</li></ul>
+  <h3>Steps</h3><table class="txt"><tr><td>1</td><td><code>git clone ${REPO}</code><br><code>pip install -e strat-enrichment</code></td><td>Installs the package and the grammar it takes every definition from.</td></tr>
+  <tr><td>2</td><td><code>python strat-enrichment/stats/atlas.py futures minutes.parquet atlas.json --name ES</code></td><td>Builds the bars, labels every bar (1, 2U, 2D, F2U, F2D, 3U, 3D) and measures every first break. Use <code>futures</code> for CME sessions (18:00 ET) or <code>stocks</code> for regular hours.</td></tr>
+  <tr><td>3</td><td><code>python strat-enrichment/stats/build_page.py atlas.json page.html --title "My Strat Stats"</code></td><td>Writes a page like this one.</td></tr></table>
+  <p>For the bar states themselves, <code>strat-enrich minutes.parquet out/</code> writes every completed bar from 15m to M (type, above or below open, took C1 high or low, 2- and 3-bar combos, timeframe continuity) and each timeframe's live state at every minute.</p>
+  <h3>The definitions it uses</h3><ul>
+  <li><b>Combo and entry bar</b>: a row is C2 then C1, the two closed bars. The entry bar is the next bar; the entry is a stop at C1's high (long) or low (short), or the open if it gaps through. No break, no trade.</li>
+  <li><b>Failed 2</b>: a 2 that closes back inside the prior bar's range, edges included. Only 2s fail. A 3 is 3U or 3D by its close against its own open.</li>
+  <li><b>Equal is not a break</b>: a high that only matches the prior high has not taken it.</li>
+  <li><b>Above open</b>: the close is above the bar's own open. A close at the open is not above.</li></ul>
+  <p class="note">Our data is licensed and can't be shared, so bring your own. Run on NQ with the same dates, the code reproduces @notprofgreen's NQ page almost cell for cell (vs NQ tab).</p>`;
+}
+
+const VIEWS = {overview:vOverview,means:vMeans,nq:vNq,setups:vSetups,failed:vFailed,trans:vTrans,ctx:vCtx,year:vYear,method:vMethod,repro:vRepro};
+function render(){
+  $('#nav').innerHTML = TABS.map(t=>btn(t[1],t[0]===S.tab,`setTab('${t[0]}')`)).join('');
+  if(!TF.includes(S.tf) && !['failed','trans'].includes(S.tab)) S.tf = TF[0];
+  $('#view').innerHTML = VIEWS[S.tab]();
+}
+function setTab(t){S.tab=t;render();try{localStorage.setItem('atlas_tab',t)}catch(e){}}
+function setTf(t){S.tf=t;S.sel=null;render()}
+function setDir(d){S.dir=d;S.sel=null;render()}
+function setMetric(m){S.metric=m;render()}
+function setCtx(c){S.ctx=c;render()}
+function pick(a,b){S.sel=[a,b];render()}
+(function(){
+  try{const t=localStorage.getItem('atlas_tab'); if(t && VIEWS[t]) S.tab=t}catch(e){}
+  if(location.hash && VIEWS[location.hash.slice(1)]) S.tab = location.hash.slice(1);
+  header(); render();
+})();
+</script>
+
+</body>
+</html>
