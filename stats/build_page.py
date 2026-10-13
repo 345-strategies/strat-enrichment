@@ -7,6 +7,7 @@ Usage: python stats/build_page.py atlas.json page.html --title "My Strat Stats"
 """
 
 import argparse
+import html
 import json
 from pathlib import Path
 
@@ -33,18 +34,18 @@ def main() -> None:
     rep = json.loads(a.nq_replication.read_text()) if a.nq_replication else None
     if rep:
         rep.pop("cells", None)
-    html = (
+    page = (
         TEMPLATE.read_text()
         .replace("__HEAD__", a.head.read_text().rstrip() if a.head else "")
         .replace("__NAV__", a.nav.read_text().strip() if a.nav else "")
         .replace("__REPO__", json.dumps(a.repo))
         .replace("__NQREP__", embed(rep))
         .replace("__NQ__", embed(json.loads(a.nq.read_text()) if a.nq else None))
-        .replace("__TITLE__", a.title)
+        .replace("__TITLE__", html.escape(a.title))
         .replace("__DATA__", embed(json.loads(a.atlas.read_text())))
     )
-    a.out.write_text(html)
-    print(a.out, len(html))
+    a.out.write_text(page)
+    print(a.out, len(page))
 
 
 if __name__ == "__main__":

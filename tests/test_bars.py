@@ -74,12 +74,16 @@ def test_stocks_regular_hours_only():
     assert set(et(h4.ts).dt.strftime("%H:%M")) == {"09:30", "13:30"}
 
 
-def test_a_session_through_the_dst_change_is_refused():
-    # 2026-11-01 01:00-01:59 ET happens twice; a 24-hour feed would merge them into one 1h bar
-    ts = np.arange(pd.Timestamp("2026-11-01 04:00", tz="UTC").timestamp(), pd.Timestamp("2026-11-01 08:00", tz="UTC").timestamp(), 60).astype(int)
+@pytest.mark.parametrize("start,end", [
+    ("2026-11-01 04:00", "2026-11-01 08:00"),   # 01:00-01:59 ET happens twice
+    ("2026-03-08 06:00", "2026-03-08 08:00"),   # 02:00-02:59 ET never happens
+])
+@pytest.mark.parametrize("tf", ["15m", "1h"])
+def test_a_session_through_a_dst_change_is_refused(start, end, tf):
+    ts = np.arange(pd.Timestamp(start, tz="UTC").timestamp(), pd.Timestamp(end, tz="UTC").timestamp(), 60).astype(int)
     m = pd.DataFrame({"ts": ts, "o": 1.0, "h": 1.0, "l": 1.0, "c": 1.0})
     with pytest.raises(ValueError, match="daylight saving"):
-        enrich(m, market="futures", timeframes=["1h"])
+        enrich(m, market="futures", timeframes=[tf])
 
 
 def test_unknown_timeframe_in_a_tfc_set_is_refused(raw):

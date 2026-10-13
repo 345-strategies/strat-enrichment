@@ -66,7 +66,7 @@ Every timeframe counts from the session open, not from midnight.
 - **Stocks**: 1h bars start at 09:30, 10:30 and so on, and the last one is 30 minutes. 4h bars start at 09:30 and 13:30.
 - **W** is the ISO week of the session date and **M** its calendar month.
 
-Times are ET wall clock, so the anchor follows daylight saving time. Both markets are closed when the clocks change. If your data trades through a change, the run stops with an error instead of merging two real hours into one bar.
+Times are ET wall clock, so the anchor follows daylight saving time. Both markets are closed when the clocks change. If a session in your data trades through a change, the run stops with an error, because its slots would repeat or skip an hour.
 
 ## Output
 

@@ -54,18 +54,6 @@ def build_bars(minutes: pd.DataFrame, tf: str) -> tuple[pd.DataFrame, np.ndarray
     l = minutes["l"].to_numpy(dtype=float)
     ts = minutes["ts"].to_numpy()
 
-    # Slots are ET wall clock. A session that trades through the autumn DST
-    # change repeats an hour, which would merge two real hours into one bar.
-    n = tf_minutes(tf)
-    if n is not None:
-        too_long = np.flatnonzero(ts - ts[starts][bar_index] >= n * 60)
-        if len(too_long):
-            at = pd.Timestamp(int(ts[too_long[0]]), unit="s", tz="UTC")
-            raise ValueError(
-                f"{tf}: a bar spans more than {tf} of real time at {at}. The data "
-                "trades through a daylight saving change, which session-anchored bars cannot represent."
-            )
-
     bars = pd.DataFrame(
         {
             "ts": ts[starts],
