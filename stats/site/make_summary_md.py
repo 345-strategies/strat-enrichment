@@ -39,6 +39,32 @@ w(f"- Replication: run on NQ over @notprofgreen's window ({rep['info']['start']}
   f"15m 2D-2D long, flags too ({his['our_d1']:+.1f} vs his {his['his_d1']:+.1f}).")
 w("- What it means: the edge, if any, is not in the bar label. It has to come from context, targets, or management, which this study does not test.")
 w("")
+# Questions people ask answer engines, answered from the same numbers. make_site_page.py turns this section into FAQPage JSON-LD.
+p1 = [b["p1"] for b in a["base"] if b["tf"] in info["trade_tfs"]]
+p2 = [b["p2"] for b in a["base"] if b["tf"] in info["trade_tfs"]]
+f2 = [c for c in sig if c["c1"].startswith("F2")]
+f2_list = "; ".join(f"{c['tf']} {c['c2']} then {c['c1']}, traded {c['dir']} ({c['d1']:+.1f} points)" for c in f2)
+f2_worse = sum(c["d1"] < 0 for c in f2)
+w("## Questions")
+w("")
+w("### Does The Strat work?")
+w("")
+w(f"Not from the bar label alone, on this test. Of {len(tested)} TheStrat setup cells on ES futures with at least {info['min_n']} trades, "
+  f"{len(sig)} differ from a random break at q < 0.05. The test is one entry (the first break of the setup bar) and one 1R bracket. "
+  "Context, targets and trade management are not tested, so this does not say whether a trader using TheStrat makes money.")
+w("")
+w("### What is TheStrat's win rate?")
+w("")
+w(f"There is no single number. Across every first break on ES futures from {info['start'][:4]} to {info['end'][:4]}, "
+  f"{min(p1):.0f}-{max(p1):.0f}% reach +1R before the stop and {min(p2):.0f}-{max(p2):.0f}% reach +2R, depending on timeframe "
+  f"({', '.join(info['trade_tfs'])}) and direction. The {len(sig)} combos that differ from that baseline at q < 0.05 move +1R by "
+  f"{min(abs(c['d1']) for c in sig):.0f}-{max(abs(c['d1']) for c in sig):.0f} points.")
+w("")
+w("### Do failed 2s work better?")
+w("")
+w(f"Not as a group. {len(f2)} of the {len(sig)} setup cells that differ from baseline have a failed 2 as the setup bar: {f2_list}. "
+  f"{f2_worse} of the {len(f2)} do worse than a random break.")
+w("")
 w("## Definitions")
 w("")
 w("- Bar types compare each bar with the one before, highs and lows only. 1 = inside (broke neither side). 2U / 2D = broke the prior high only / low only. "
