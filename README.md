@@ -122,9 +122,13 @@ Use `futures` or `stocks`. `--tick` sets the stop offset (default 0.25 and 0.01)
 
 `stats/site/build.sh` builds the files behind the 345strategies.com page: the page with its search and summary tags, a plain-text twin and the results as JSON. It takes the ES atlas plus the NQ comparison (`--nq`, `--nq-replication` on `build_page.py`), and its last step pre-renders the first tab with node.
 
+## Volume study
+
+`volume/` has the code behind the [volume study](https://345strategies.com/research/volume): does bar volume tell you which way a breakout will go, on NQ and ES futures, SPY, Bitcoin and large US stocks, with every fill checked on 1-minute bars after costs. `volume/README.md` has every command, from vendor bars to the published tables. It is research code: it measures trades, it does not give you a strategy.
+
 ## What this does not do
 
-No signals, entries, targets, stops, levels or backtests. It labels bars. What you do with the labels is up to you.
+The enrichment package gives no signals, entries, targets, stops, levels or backtests. It labels bars. What you do with the labels is up to you.
 
 My data is licensed and can't be shared, so bring your own 1-minute bars.
 
