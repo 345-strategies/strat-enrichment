@@ -13,10 +13,11 @@ URL = "https://345strategies.com/research/strat-stats"
 TITLE = "Strat Stats: ES and NQ futures, 2018-2026"
 DESC = ("Every TheStrat combo's first break on ES and NQ futures, 2018-2026, measured on 3.07M one-minute bars "
         "against a baseline, with failed 2s split out and a replication of @notprofgreen's NQ study. Research-only.")
-LEDE = ("Strat Stats measures the first break of every TheStrat combo on E-mini S&amp;P 500 (ES) futures, "
-        f"{info['start']} to {info['end']}, from {info['minutes']:,} one-minute bars, against a baseline of all breaks. "
-        "Entries are on the bar after the pattern completes; failed 2s are split out. The headline: the combo label alone "
-        "barely beats a random break, on ES and on NQ. Descriptive statistics, not a trading system.")
+LEDE = ("<b>How often do TheStrat setups work on ES futures?</b> Across "
+        f"{info['minutes'] / 1e6:.2f}M one-minute bars from {info['start'][:4]} to {info['end'][:4]}, the combo label alone "
+        "barely beats a random break, on ES and on NQ. Strat Stats measures the first break of every TheStrat combo on "
+        f"E-mini S&amp;P 500 (ES) futures, {info['start']} to {info['end']}, against a baseline of all breaks. "
+        "Entries are on the bar after the pattern completes; failed 2s are split out. Descriptive statistics, not a trading system.")
 
 
 def inline(t):
@@ -36,6 +37,8 @@ def md_to_html(text):
             h = ln[3:]
             hid = ids.get(h) or re.sub(r"[^a-z0-9]+", "-", h.lower()).strip("-")
             out.append(f'<h2 id="{hid}">{inline(h)}</h2>')
+        elif ln.startswith("### "):
+            out.append(f"<h3>{inline(ln[4:])}</h3>")
         elif ln.startswith("- "):
             items = []
             while i < len(lines) and lines[i].startswith("- "):
@@ -63,6 +66,9 @@ def md_to_html(text):
 
 body_md = md.split("## Key findings", 1)[1]
 summary = md_to_html("## Key findings" + body_md)
+questions = md.split("## Questions\n", 1)[1].split("\n## ", 1)[0]
+faq = [(q.split("\n", 1)[0], q.split("\n", 1)[1].strip()) for q in questions.split("### ")[1:]]
+assert len(faq) >= 3, "Questions section missing from the summary"
 
 ld = {"@context": "https://schema.org", "@graph": [
     {"@type": "Dataset", "@id": URL + "#dataset", "name": TITLE, "description": DESC, "url": URL,
@@ -80,6 +86,8 @@ ld = {"@context": "https://schema.org", "@graph": [
      "author": {"@id": "https://345strategies.com/#org"},
      "publisher": {"@id": "https://345strategies.com/#org"}, "about": {"@id": URL + "#dataset"},
      "image": "https://345strategies.com/assets/strat-stats-og.png"},
+    {"@type": "FAQPage", "url": URL, "mainEntity": [
+        {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": ans}} for q, ans in faq]},
     {"@type": "Organization", "@id": "https://345strategies.com/#org", "name": "345 Strategies", "url": "https://345strategies.com/"}]}
 
 head = f'''<title>{TITLE} | 345 Strategies</title>
@@ -109,7 +117,7 @@ assert n == 1, "no <title> in the built page"
 page = page.replace("</style>", """.lede-top{max-width:90ch;font-size:15px;line-height:1.6;margin:4px 0 6px}
 .meta-top{color:var(--dim);font-size:13px;margin:0 0 14px}.meta-top a{color:var(--dim)}
 #about{border-top:1px solid var(--line);margin-top:36px;padding-top:8px;max-width:110ch}
-#about h2{font-size:18px;margin:22px 0 8px}#about li{margin:4px 0}
+#about h2{font-size:18px;margin:22px 0 8px}#about h3{font-size:15px;margin:16px 0 4px}#about li{margin:4px 0}
 </style>""", 1)
 page = page.replace('<div class="wrap">\n  <header>',
     '<div class="wrap">\n  <a href="/" style="display:inline-block;margin:0 0 14px;color:var(--dim);font:500 13px/1 \'IBM Plex Mono\',monospace;text-decoration:none;letter-spacing:.08em">&larr; 345 STRATEGIES</a>\n  <header>', 1)
@@ -119,7 +127,9 @@ page = page.replace('  <div class="types" id="types"></div>',
     '  <div class="types" id="types"></div>', 1)
 page = page.replace('  <main id="view"></main>\n</div>',
     f'  <main id="view"></main>\n  <section id="about" aria-label="Summary and definitions">\n{summary}\n  </section>\n</div>', 1)
-for tag in ('id="about"', 'class="lede-top"', '345 STRATEGIES', 'application/ld+json'):
+page = page.replace("</body>", "<!-- Vercel Web Analytics: first-party, no cookies, no third-party origin. -->\n"
+                    '<script defer src="/_vercel/insights/script.js"></script>\n</body>', 1)
+for tag in ('id="about"', 'class="lede-top"', '345 STRATEGIES', 'application/ld+json', 'id="questions"', '"FAQPage"', '/_vercel/insights'):
     assert tag in page, tag
 open(dst, "w").write(page)
 print(dst, len(page))
